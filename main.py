@@ -1,21 +1,26 @@
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # ! This is a sample file for your experiments. You can change
 # !     this file as you wish.
-# ! Strategy: Optimizing both C and class_weight to maximize F1.
+# ! Strategy: Exhaustive Grid Search with Regularization for 0.92+ F1
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 from preprocessing import Preprocessor, Tokenizer, Embedder
 from model import Model
 
 import pandas as pd
+import os
 from sklearn.svm import LinearSVC
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import GridSearchCV
 
 # =====================================================================
-# 1. DATA LOADING
+# 1. DATA LOADING & DIRECTORY SETUP
 # =====================================================================
 print("Loading datasets...")
 train_data = pd.read_csv("data/train.csv")
 valid_data = pd.read_csv("data/valid.csv")
+
+# Ensure the directory exists to avoid FileNotFoundError
+if not os.path.exists("saved_objects"):
+    os.makedirs("saved_objects")
 
 # =====================================================================
 # 2. INITIALIZING & TRAINING PREPROCESSING OBJECTS
@@ -29,7 +34,6 @@ train_texts = train_data["text"].tolist()
 train_tokens = [tokenizer.tokenize(text) for text in train_texts]
 
 print("Training the Embedder (TF-IDF FeatureUnion)...")
-# Note: Embedder trains on a list of tokens but joins them internally for TF-IDF
 embedder.train(train_tokens)
 
 # Saving preprocessors to the mandatory saved_objects/ directory
@@ -48,34 +52,29 @@ trainX, trainY = preprocessor.prepare_data(train_data)
 validX, validY = preprocessor.prepare_data(valid_data)
 
 # =====================================================================
-# 4. GRANULAR HYPERPARAMETER TUNING
+# 4. EXHAUSTIVE HYPERPARAMETER TUNING
 # =====================================================================
-print("Starting Precision Tuning using RandomizedSearchCV...")
+print("Starting Exhaustive Grid Search with Regularization focus...")
 
-# UPGRADE: Tuning class_weight is the "secret weapon" to push F1 closer to 0.95
-# when ROC AUC is already high. It shifts the decision threshold.
-param_distributions = {
-    'C': [0.05, 0.1, 0.12, 0.15, 0.2, 0.5, 1.0],
+param_grid = {
+    'C': [0.05, 0.08, 0.1, 0.12, 0.15], 
     'class_weight': [
+        {0: 1.0, 1: 0.90}, 
         'balanced', 
-        {0: 1, 1: 1.1}, 
-        {0: 1, 1: 1.2}, 
-        {0: 1, 1: 1.3}, 
-        {0: 1, 1: 1.4}
+        {0: 1.0, 1: 1.10}, 
+        {0: 1.0, 1: 1.20}
     ]
 }
 
-# Initializing a temporary LinearSVC for the search process
 temp_model = LinearSVC(max_iter=10000, dual="auto", random_state=42)
 
-search = RandomizedSearchCV(
+search = GridSearchCV(
     estimator=temp_model, 
-    param_distributions=param_distributions, 
-    n_iter=25,               # Searching 15 combinations for a better "sweet spot"
+    param_grid=param_grid, 
     scoring='f1_weighted', 
-    cv=5,                    # 5-fold cross-validation for maximum robustness
+    cv=5,                    
     verbose=1, 
-    n_jobs=1                 # Safest for Mac/Python 3.13 environments
+    n_jobs=1                 
 )
 
 search.fit(trainX, trainY)
@@ -87,7 +86,6 @@ print(f"Optimal Configuration Found: {best_params}")
 # =====================================================================
 print("Training the Final Model with Best Parameters...")
 
-# We pass all best_params (C and class_weight) to our Model class
 model = Model(**best_params)
 model.train(trainX, trainY)
 
@@ -97,5 +95,9 @@ model.save("saved_objects/model.pkl")
 print("\n" + "="*40)
 print("FINAL EVALUATION ON VALIDATION SET:")
 print("="*40)
-# Final check to see the F1 improvement
 print(model.evaluate(validX, validY))
+
+# Overfitting kontrolü için Train ve Valid skorlarını karşılaştır
+train_results = model.evaluate(trainX, trainY)
+print(f"Train F1: {train_results['f1']}")
+print(f"Valid F1: {model.evaluate(validX, validY)['f1']}")

@@ -21,25 +21,33 @@ class Model:
                 print(f"!! {type(self).__name__} is not trained.")
              
     def init_model(self, **kwargs):
-        # Flexible parameters allowed through kwargs for tuning
+        # Eğer parametre gelmezse güvenli varsayılanları (0.1 ve balanced) kullan
         c_value = kwargs.get('C', 0.1) 
         cw = kwargs.get('class_weight', 'balanced')
         
-        # LinearSVC: Optimal for high-dimensional sparse data
+        # LinearSVC: Yüksek boyutlu TF-IDF verileri için en optimize çözüm.
+        # dual="auto" Mac/Python 3.13 ortamlarında stabilite sağlar.
         self.model = LinearSVC(
-            C=c_value, class_weight=cw, max_iter=10000, 
-            dual="auto", tol=1e-4, random_state=42
+            C=c_value, 
+            class_weight=cw, 
+            max_iter=10000, 
+            dual="auto", 
+            tol=1e-4, 
+            random_state=42
         )
 
     def train(self, x: List[List[float]], y: List[int]):
+        # Model eğitimi
         self.model.fit(x, y)
 
+    # =================================================================
+    # ! DO NOT CHANGE THESE METHODS (Hocanın dokunulmaz ilan ettiği alan)
+    # =================================================================
     def predict(self, x: List[List[float]]) -> List[int]:
         return self.model.predict(x)
 
     def evaluate(self, x: List[List[float]], y: List[int]) -> Dict:
         prediction = self.predict(x)
-        # Using decision_function for the most precise ROC AUC calculation
         scores = self.model.decision_function(x)
         return {
             "accuracy": accuracy_score(y, prediction),
