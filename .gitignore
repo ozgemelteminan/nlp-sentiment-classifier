@@ -1,0 +1,17 @@
+# --- System Files ---
+.DS_Store
+__pycache__/
+
+# --- Data Privacy ---
+# İçindeki .gitkeep hariç her şeyi görmezden gel
+data/*
+!data/.gitkeep
+
+# --- Model Artifacts ---
+# Dev pkl dosyalarını yükleme, .gitkeep kalsın
+saved_objects/*
+!saved_objects/.gitkeep
+
+# --- Python ---
+*.pyc
+.venv/
