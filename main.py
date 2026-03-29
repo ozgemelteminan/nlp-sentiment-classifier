@@ -52,16 +52,15 @@ validX, validY = preprocessor.prepare_data(valid_data)
 # =====================================================================
 print("Starting Precision Tuning using RandomizedSearchCV...")
 
-# UPGRADE: Tuning class_weight is the "secret weapon" to push F1 closer to 0.95
 # when ROC AUC is already high. It shifts the decision threshold.
 param_distributions = {
-    'C': [0.05, 0.1, 0.12, 0.15, 0.2, 0.5, 1.0],
+    'C': [0.08, 0.1, 0.12, 0.14, 0.16, 0.18, 0.2], 
     'class_weight': [
-        'balanced', 
-        {0: 1, 1: 1.1}, 
-        {0: 1, 1: 1.2}, 
-        {0: 1, 1: 1.3}, 
-        {0: 1, 1: 1.4}
+        {0: 1, 1: 1.12}, 
+        {0: 1, 1: 1.15}, 
+        {0: 1, 1: 1.18}, 
+        {0: 1, 1: 1.20},
+        {0: 1, 1: 1.22}
     ]
 }
 
@@ -71,7 +70,7 @@ temp_model = LinearSVC(max_iter=10000, dual="auto", random_state=42)
 search = RandomizedSearchCV(
     estimator=temp_model, 
     param_distributions=param_distributions, 
-    n_iter=25,               # Searching 15 combinations for a better "sweet spot"
+    n_iter=35,               # Searching 15 combinations for a better "sweet spot"
     scoring='f1_weighted', 
     cv=5,                    # 5-fold cross-validation for maximum robustness
     verbose=1, 
@@ -99,3 +98,10 @@ print("FINAL EVALUATION ON VALIDATION SET:")
 print("="*40)
 # Final check to see the F1 improvement
 print(model.evaluate(validX, validY))
+
+# Eğitim seti üzerindeki performansı ölç
+train_results = model.evaluate(trainX, trainY)
+print(f"Train F1: {train_results['f1']}")
+
+# Zaten bastırdığın valid skorunu hatırla
+print(f"Valid F1: {model.evaluate(validX, validY)['f1']}")

@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import FeatureUnion
 
 # =====================================================================
-# ! DO NOT CHANGE THESE CLASSES (Hocanın dokunma dediği kısımlar)
+# ! DO NOT CHANGE THESE CLASSES 
 # =====================================================================
 class Preprocessor:
     def __init__(self, tokenizer, embedder, **kwargs):
@@ -47,32 +47,33 @@ class PreprocessorObject:
     
     def load(self, path: str):
         with open(path, 'rb') as f:
-            # FIXED: Virgül hatası temizlendi, direkt nesne döner.
             return pickle.load(f)
 
 # =====================================================================
-# ! UPDATE THESE CLASSES (Senin fark yarattığın kısımlar)
+# ! UPDATE THESE CLASSES 
 # =====================================================================
 class Tokenizer(PreprocessorObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def train(self, texts: List[str]):
-        # Professional touch: Rule-based tokenizer doesn't need training
         return self
     
     def _handle_negation(self, tokens: List[str]) -> List[str]:
-        # UPGRADE: Negation handling captures context like "not_good"
-        neg_words = {"not", "no", "never", "none", "neither", "nor"}
+        # UPGRADE: Negation Span (Olumsuzluğu sonraki 3 kelimeye yayar)
+        # Örn: "not really very good" -> "not", "NOT_really", "NOT_very", "NOT_good"
+        neg_words = {"not", "no", "never", "none", "neither", "nor", "n't"}
         result = []
-        negate = False
+        negate_count = 0 
+        
         for t in tokens:
-            if t in neg_words:
-                negate = True
+            # Kelime bir olumsuzluk ifadesi mi veya "n't" ile mi bitiyor?
+            if t in neg_words or t.endswith("n't"):
+                negate_count = 2 # Sonraki 3 kelimeyi işaretle
                 result.append(t)
-            elif negate:
+            elif negate_count > 0:
                 result.append("NOT_" + t)
-                negate = False
+                negate_count -= 1
             else:
                 result.append(t)
         return result
@@ -93,15 +94,27 @@ class Embedder(PreprocessorObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not hasattr(self, 'model'):
-            # STRATEGY: (1, 4) Word + (3, 6) Char with 300k combined capacity
+    
             word_tfidf = TfidfVectorizer(
-                analyzer='word', ngram_range=(1, 4), sublinear_tf=True,
-                max_features=150000, min_df=2, max_df=0.85, norm='l2'
+                analyzer='word', 
+                ngram_range=(1, 4),         
+                sublinear_tf=True,
+                max_features=180000, 
+                min_df=2, 
+                max_df=0.85,                
+                stop_words=None,       # Gürültü temizliği için eklendi
+                norm='l2'
             )
             char_tfidf = TfidfVectorizer(
-                analyzer='char_wb', ngram_range=(3, 6), sublinear_tf=True,
-                max_features=150000, min_df=2, max_df=0.85, norm='l2'
+                analyzer='char_wb', 
+                ngram_range=(3, 6),         
+                sublinear_tf=True,
+                max_features=180000, 
+                min_df=2, 
+                max_df=0.8,
+                norm='l2'
             )
+
             self.model = FeatureUnion([
                 ("word", word_tfidf), ("char", char_tfidf)
             ], transformer_weights={"word": 1.0, "char": 1.3})
@@ -112,5 +125,4 @@ class Embedder(PreprocessorObject):
 
     def embed(self, tokens_list: List[List[str]]):
         joined_texts = [" ".join(t) for t in tokens_list]
-        # FIXED: Sondaki virgül kaldırıldı, hata vermez.
         return self.model.transform(joined_texts)
