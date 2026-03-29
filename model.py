@@ -21,6 +21,7 @@ class Model:
                 print(f"!! {type(self).__name__} is not trained.")
              
     def init_model(self, **kwargs):
+        # STRATEGY: 0.95 F1 için GridSearchCV'den gelen parametreleri yakala
         # Eğer parametre gelmezse güvenli varsayılanları (0.1 ve balanced) kullan
         c_value = kwargs.get('C', 0.1) 
         cw = kwargs.get('class_weight', 'balanced')
