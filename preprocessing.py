@@ -11,9 +11,6 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import FeatureUnion
 
-# =====================================================================
-# ! DO NOT CHANGE THESE CLASSES
-# =====================================================================
 class Preprocessor:
     def __init__(self, tokenizer, embedder, **kwargs):
         self.tokenizer = tokenizer
@@ -49,9 +46,6 @@ class PreprocessorObject:
         with open(path, 'rb') as f:
             return pickle.load(f)
 
-# =====================================================================
-# ! UPDATE THESE CLASSES (CHAMPION VERSION - 0.9154 F1 / 0.9718 ROC AUC)
-# =====================================================================
 class Tokenizer(PreprocessorObject):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -60,19 +54,21 @@ class Tokenizer(PreprocessorObject):
         return self
     
     def _handle_negation(self, tokens: List[str]) -> List[str]:
-        # Olumsuzluk eklerini ve kelimeleri kapsayan genişletilmiş liste
         neg_words = {
             "not", "no", "never", "none", "neither", "nor", "cannot",
             "dont", "isnt", "wasnt", "didnt", "wouldnt", "couldnt", 
             "shouldnt", "havent", "hasnt", "hadnt", "arent", "werent", 
             "aint", "wont", "cant"
         }
+        scope_breakers = {"<exclamation>", "<question>", "<smile>", "<sad>"}
         result = []
         negate_count = 0 
-        
         for t in tokens:
             if t in neg_words:
-                negate_count = 2 
+                negate_count = 4 
+                result.append(t)
+            elif t in scope_breakers:
+                negate_count = 0
                 result.append(t)
             elif negate_count > 0:
                 result.append("NOT_" + t)
@@ -82,22 +78,22 @@ class Tokenizer(PreprocessorObject):
         return result
 
     def tokenize(self, text: str) -> List[str]:
+        # Kontraksiyon Çözücü: Negation listesiyle uyum için
+        text = re.sub(r"n't", " not", text)
+        text = re.sub(r"'re", " are", text)
+                
+        text = re.sub(r'\b([A-Z]{2,})\b', r'\1 <ALLCAPS>', text)
         text = text.lower()
         
-        # Emojileri koruma ve etiketleme
         text = re.sub(r"(:\)|:-\)|=\)|:d|:-d|<3)", " <SMILE> ", text)
         text = re.sub(r"(:\(|:-\(|=\(|:'\()", " <SAD> ", text)
-        
-        # Gereksiz kısımları temizle ve tekrarları azalt
         text = re.sub(r"http\S+|www\.\S+", "", text)
-        text = re.sub(r"(.)\1{2,}", r"\1\1", text) 
+        text = re.sub(r"([a-z])\1{2,}", r"\1\1 <ELONGATED> ", text) 
         
-        # Noktalama ve sayıları yakalayarak duygu sinyaline çevirme
         text = re.sub(r"\d+", " <NUM> ", text)
         text = re.sub(r"!", " <EXCLAMATION> ", text)
         text = re.sub(r"\?", " <QUESTION> ", text)
         
-        # Yukarıdaki özel etiketlerimiz (<...>) hariç tüm noktalama işaretlerini sil
         text = re.sub(r"[^a-z\s<>]", "", text)
         
         tokens = re.sub(r"\s+", " ", text).strip().split()
@@ -109,34 +105,32 @@ class Embedder(PreprocessorObject):
         if not hasattr(self, 'model'):
             word_tfidf = TfidfVectorizer(
                 analyzer='word', 
-                token_pattern=r"\S+",       # Tek harfleri (I, a) ve etiketleri (<SMILE>) KORUR
-                ngram_range=(1, 4),         # Kelime grupları için geniş aralık
+                token_pattern=r"\S+",       
+                ngram_range=(1, 3),         
                 sublinear_tf=True,          
-                max_features=150000,        # En iyi skoru veren kapasite ayarı
+                max_features=200000,        
                 min_df=2,                   
-                max_df=0.85,                
-                stop_words=None,            
+                max_df=0.90,                
                 norm='l2'
             )
             char_tfidf = TfidfVectorizer(
                 analyzer='char_wb', 
-                ngram_range=(2, 6),         # Karakter seviyesindeki detaylar için
+                ngram_range=(3, 6),         
                 sublinear_tf=True,
-                max_features=150000,        
-                min_df=2,                   
-                max_df=0.85,
+                max_features=100000,        
+                min_df=3,                   
+                max_df=0.90,
                 norm='l2'
             )
-            # Ağırlık dengesi: Karakterlere (ekler ve vurgular için) %20 daha fazla önem ver
             self.model = FeatureUnion([
                 ("word", word_tfidf), ("char", char_tfidf)
-            ], transformer_weights={"word": 1.0, "char": 1.2})
+            ], transformer_weights={"word": 1.0, "char": 0.8})
 
     def train(self, tokens_list: List[List[str]]):
+        # Hata buradaydı, joined_texts doğru tanımlanmalı
         joined_texts = [" ".join(t) for t in tokens_list]
         self.model.fit(joined_texts)
 
     def embed(self, tokens_list: List[List[str]]):
         joined_texts = [" ".join(t) for t in tokens_list]
-        # Transform her zaman sparse matrix döndürür, bu LinearSVC için idealdir.
         return self.model.transform(joined_texts)
