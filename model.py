@@ -1,6 +1,13 @@
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # ! This is the file for the model class.
-# !     Do not change predict, evaluate, save, load methods.
+# !     You need to implement the train and predict methods.
+# !     You can also add any other methods as required.
+# !     You can also add required parameters to the methods.
+# !     You can also use additional packages in this file.
+# !
+# ! Make sure that the final implementation is compatible with the
+# !     Model class. Be careful about the input and output types of
+# !     the methods.
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
@@ -13,47 +20,45 @@ class Model:
     def __init__(self, pretrained_path: str = None, **kwargs):
         self.pretrained_path = pretrained_path
         self.__dict__.update(kwargs)
+
         if pretrained_path != None:
             self.__dict__.update(self.load(self.pretrained_path).__dict__)
         else:
             self.init_model(**kwargs)
-            if not kwargs:
-                print(f"!! {type(self).__name__} is not trained.")
+            # Not trained uyarısını konsolu kirletmemesi için sildik
              
+    ###########################################################
+    # ! Update functions for Model initialization and training
+    ###########################################################
     def init_model(self, **kwargs):
-        # Eğer parametre gelmezse güvenli varsayılanları (0.1 ve balanced) kullan
-        c_value = kwargs.get('C', 0.1) 
-        cw = kwargs.get('class_weight', 'balanced')
+        # Eğer parametre gelmezse Şampiyon varsayılanları (0.25 ve None) kullan
+        c_value = kwargs.get('C', 0.25) 
+        cw = kwargs.get('class_weight', None)
         
         # LinearSVC: Yüksek boyutlu TF-IDF verileri için en optimize çözüm.
-        # dual="auto" Mac/Python 3.13 ortamlarında stabilite sağlar.
         self.model = LinearSVC(
             C=c_value, 
             class_weight=cw, 
             max_iter=10000, 
             dual="auto", 
-            tol=1e-4, 
             random_state=42
         )
 
     def train(self, x: List[List[float]], y: List[int]):
-        # Model eğitimi
         self.model.fit(x, y)
 
-    # =================================================================
-    # ! DO NOT CHANGE THESE METHODS (Hocanın dokunulmaz ilan ettiği alan)
-    # =================================================================
+    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    # ! Do not change the remaining code
+    # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     def predict(self, x: List[List[float]]) -> List[int]:
         return self.model.predict(x)
 
     def evaluate(self, x: List[List[float]], y: List[int]) -> Dict:
         prediction = self.predict(x)
-        scores = self.model.decision_function(x)
-        return {
-            "accuracy": accuracy_score(y, prediction),
-            "f1": f1_score(y, prediction, average="weighted"),
-            "roc_auc": roc_auc_score(y, scores, average="weighted")
-        }
+
+        return {"accuracy": accuracy_score(y, prediction),
+                "f1": f1_score(y, prediction, average="weighted"),
+                "roc_auc": roc_auc_score(y, prediction, average="weighted")}
 
     def save(self, path: str):
         with open(path, 'wb') as f:
