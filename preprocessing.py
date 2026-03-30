@@ -108,8 +108,8 @@ class Embedder(PreprocessorObject):
                 token_pattern=r"\S+",       
                 ngram_range=(1, 3),         
                 sublinear_tf=True,          
-                max_features=200000,        
-                min_df=2,                   
+                max_features=200000,        # Kapasite korundu
+                min_df=3,                   # CLAUDE "FARKLI AÇI": 2'den 3'e (Gürültü filtresi)
                 max_df=0.90,                
                 norm='l2'
             )
@@ -118,16 +118,16 @@ class Embedder(PreprocessorObject):
                 ngram_range=(3, 6),         
                 sublinear_tf=True,
                 max_features=100000,        
-                min_df=3,                   
+                min_df=4,                   # CLAUDE "FARKLI AÇI": 3'den 4'e (Gürültü filtresi)
                 max_df=0.90,
                 norm='l2'
             )
+            # Ağırlık dengesi şampiyon ayarında (0.8) kalıyor
             self.model = FeatureUnion([
                 ("word", word_tfidf), ("char", char_tfidf)
             ], transformer_weights={"word": 1.0, "char": 0.8})
 
     def train(self, tokens_list: List[List[str]]):
-        # Hata buradaydı, joined_texts doğru tanımlanmalı
         joined_texts = [" ".join(t) for t in tokens_list]
         self.model.fit(joined_texts)
 

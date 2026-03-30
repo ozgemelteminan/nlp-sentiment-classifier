@@ -30,11 +30,11 @@ validX, validY = preprocessor.prepare_data(valid_data)
 
 print("Starting Grid Search...")
 param_grid = {
-    'C': [0.1, 0.2, 0.3, 0.5],
+    'C': [0.22, 0.25, 0.28],        # 0.25 etrafındaki en güçlü adaylar
     'class_weight': [
-        {0: 1.0, 1: 1.1},
-        {0: 1.0, 1: 1.15},
-        'balanced',
+        {0: 1.0, 1: 1.05},           # Mevcut şampiyon ağırlık
+        {0: 1.0, 1: 1.08},           # Claude'un yeni önerisi
+        {0: 1.0, 1: 1.1}             # Önceki başarılı ağırlık
     ]
 }
 
