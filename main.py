@@ -30,11 +30,12 @@ validX, validY = preprocessor.prepare_data(valid_data)
 
 print("Starting Grid Search...")
 param_grid = {
-    'C': [0.22, 0.25, 0.28],        # 0.25 etrafındaki en güçlü adaylar
+    'C': [0.2, 0.25, 0.28, 0.3, 0.35],
     'class_weight': [
-        {0: 1.0, 1: 1.05},           # Mevcut şampiyon ağırlık
-        {0: 1.0, 1: 1.08},           # Claude'un yeni önerisi
-        {0: 1.0, 1: 1.1}             # Önceki başarılı ağırlık
+        {0: 1.0, 1: 1.05},
+        {0: 1.0, 1: 1.1},
+        {0: 1.0, 1: 1.15},
+        'balanced',  # Modelin sınıfları otomatik dengelemesine izin veriyoruz
     ]
 }
 
@@ -43,7 +44,7 @@ temp_model = LinearSVC(max_iter=10000, dual="auto", random_state=42)
 search = GridSearchCV(
     estimator=temp_model, 
     param_grid=param_grid, 
-    scoring='f1_weighted', 
+    scoring='f1_macro',      # İŞTE KRİTİK DEĞİŞİKLİK: Weighted yerine Macro!
     cv=5,                    
     verbose=1, 
     n_jobs=1                 
