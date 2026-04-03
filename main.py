@@ -45,7 +45,7 @@ temp_model = LinearSVC(max_iter=10000, dual="auto", random_state=42)
 search = GridSearchCV(
     estimator=temp_model, 
     param_grid=param_grid, 
-    scoring='f1_macro',      # Macro stratejisine sadık kalıyoruz
+    scoring='f1_weighted', 
     cv=5,                    
     verbose=1, 
     n_jobs=1                 

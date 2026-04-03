@@ -25,17 +25,19 @@ class Model:
             self.__dict__.update(self.load(self.pretrained_path).__dict__)
         else:
             self.init_model(**kwargs)
-            # Not trained uyarısını konsolu kirletmemesi için sildik
+            if not kwargs:
+                print(f"!! {type(self).__name__} is not trained.")
              
     ###########################################################
     # ! Update functions for Model initialization and training
     ###########################################################
     def init_model(self, **kwargs):
-        # Eğer parametre gelmezse Şampiyon varsayılanları (0.25 ve None) kullan
-        c_value = kwargs.get('C', 0.25) 
-        cw = kwargs.get('class_weight', None)
+        # Eğer parametre gelmezse güvenli varsayılanları (0.1 ve balanced) kullan
+        c_value = kwargs.get('C', 0.1) 
+        cw = kwargs.get('class_weight', 'balanced')
         
         # LinearSVC: Yüksek boyutlu TF-IDF verileri için en optimize çözüm.
+        # dual="auto" Mac/Python 3.13 ortamlarında stabilite sağlar.
         self.model = LinearSVC(
             C=c_value, 
             class_weight=cw, 
