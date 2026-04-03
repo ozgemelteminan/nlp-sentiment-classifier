@@ -109,7 +109,7 @@ class Embedder(PreprocessorObject):
                 ngram_range=(1, 3),         
                 sublinear_tf=True,          
                 max_features=200000,        
-                min_df=2,                   
+                min_df=3,                   
                 max_df=0.90,                
                 norm='l2'
             )
@@ -118,7 +118,7 @@ class Embedder(PreprocessorObject):
                 ngram_range=(3, 6),         
                 sublinear_tf=True,
                 max_features=100000,        
-                min_df=3,                   
+                min_df=4,                   
                 max_df=0.90,
                 norm='l2'
             )

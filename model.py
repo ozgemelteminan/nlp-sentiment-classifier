@@ -25,17 +25,16 @@ class Model:
             self.__dict__.update(self.load(self.pretrained_path).__dict__)
         else:
             self.init_model(**kwargs)
-            # Not trained uyarısını konsolu kirletmemesi için sildik
              
     ###########################################################
     # ! Update functions for Model initialization and training
     ###########################################################
     def init_model(self, **kwargs):
-        # Eğer parametre gelmezse Şampiyon varsayılanları (0.25 ve None) kullan
+        # Eğer parametre gelmezse daha önce test edip bulduğum varsayılanları (0.25 ve None) kullan
         c_value = kwargs.get('C', 0.25) 
         cw = kwargs.get('class_weight', None)
         
-        # LinearSVC: Yüksek boyutlu TF-IDF verileri için en optimize çözüm.
+        # LinearSVC: Yüksek boyutlu TF-IDF verileri için
         self.model = LinearSVC(
             C=c_value, 
             class_weight=cw, 
