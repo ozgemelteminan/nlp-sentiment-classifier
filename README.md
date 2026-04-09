@@ -3,6 +3,7 @@
 **Author:** Özge Meltem İnan
 **Student ID:** 123200086
 
+
 ## 📌 Project Overview
 This repository contains a highly optimized machine learning pipeline for binary sentiment analysis. Complying with the assignment rules, the entire architecture is built strictly using `scikit-learn`. The model processes raw textual data and classifies it into **Positive (1)** or **Negative (0)** sentiments.
 
@@ -19,7 +20,7 @@ Reaching the `0.917` F1-score was an intensive, iterative process. Before finali
 | **Optimization V1** | - | **0.9152** | Solid initial score after establishing the TF-IDF and FeatureUnion architecture. |
 | **Optimization V2** | - | **0.9156** | Slight improvement by filtering noise via `min_df` and `max_df` parameter tuning. |
 | **Optimization V3 (Previous Peak)**| - | **0.9166** | A resistance point reached by tweaking the `C` parameter and `class_weight`. |
-| **🏆 Champion Model (Final)** | **0.9895** | **0.9170** | The absolute maximum limit reached by `LinearSVC`, breaking the 0.9166 barrier. |
+| **🏆 Champion Model (Final)** | - | **0.9170** | The absolute maximum limit reached by `LinearSVC`, breaking the 0.9166 barrier. |
 
 To achieve this progression, I conducted **10 major experiments** spanning preprocessing, feature extraction, and algorithm selection:
 

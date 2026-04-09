@@ -78,7 +78,6 @@ class Tokenizer(PreprocessorObject):
         return result
 
     def tokenize(self, text: str) -> List[str]:
-        # Kontraksiyon Çözücü: Negation listesiyle uyum için
         text = re.sub(r"n't", " not", text)
         text = re.sub(r"'re", " are", text)
                 
@@ -106,19 +105,19 @@ class Embedder(PreprocessorObject):
             word_tfidf = TfidfVectorizer(
                 analyzer='word', 
                 token_pattern=r"\S+",       
-                ngram_range=(1, 3),         
+                ngram_range=(1, 3),         # Orijinal genişliğe döndük  
                 sublinear_tf=True,          
-                max_features=200000,        
-                min_df=3,                   
+                max_features=250000,        # Kapasiteyi artırdık 
+                min_df=2,                   # Daha fazla kelime yakalamak için 3'ten 2'ye düşürdük
                 max_df=0.90,                
                 norm='l2'
             )
             char_tfidf = TfidfVectorizer(
                 analyzer='char_wb', 
-                ngram_range=(3, 6),         
+                ngram_range=(3, 6),         # Orijinal genişliğe döndük 
                 sublinear_tf=True,
-                max_features=100000,        
-                min_df=4,                   
+                max_features=150000,        # Kapasiteyi artırdık 
+                min_df=3,                   # 4'ten 3'e düşürdük
                 max_df=0.90,
                 norm='l2'
             )
