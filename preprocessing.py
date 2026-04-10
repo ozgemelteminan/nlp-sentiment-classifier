@@ -82,6 +82,14 @@ class Tokenizer(PreprocessorObject):
         return result
 
     def tokenize(self, text: str) -> List[str]:
+
+        text = re.sub(r"\bimo\b", "in my opinion", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bafaik\b", "as far as i know", text, flags=re.IGNORECASE)
+        text = re.sub(r"\bbtw\b", "by the way", text, flags=re.IGNORECASE)
+    
+        # EKLE: Derecelendirme ifadeleri
+        text = re.sub(r"\b(\d+)\s*/\s*10\b", " <rating> ", text)
+        text = re.sub(r"\b(\d+)\s*stars?\b", " <rating> ", text, flags=re.IGNORECASE)
         # 1. HTML VE GÜRÜLTÜ TEMİZLİĞİ
         text = re.sub(r"<br\s*/?>", " ", text)
         text = re.sub(r"<[^>]+>", " ", text)         # BUG FIX: <b>,<i>,<p> vs. → <> token'ı üretiyordu (1553 kez!)
@@ -158,25 +166,25 @@ class Embedder(PreprocessorObject):
             word_tfidf = TfidfVectorizer(
                 analyzer='word', 
                 token_pattern=r"\S+",       
-                ngram_range=(1, 3),         
+                ngram_range=(1, 2),         
                 sublinear_tf=True,          
-                max_features=250000,        
-                min_df=2,                   
-                max_df=0.90,                
+                max_features=100000,        
+                min_df=3,                   
+                max_df=0.85,                
                 norm='l2'
             )
             char_tfidf = TfidfVectorizer(
                 analyzer='char_wb', 
-                ngram_range=(3, 6),         
+                ngram_range=(3, 5),         
                 sublinear_tf=True,
-                max_features=150000,        
-                min_df=3,                   
+                max_features=80000,        
+                min_df=5,                   
                 max_df=0.90,
                 norm='l2'
             )
             self.model = FeatureUnion([
                 ("word", word_tfidf), ("char", char_tfidf)
-            ], transformer_weights={"word": 1.0, "char": 0.8})
+            ], transformer_weights={"word": 1.0, "char": 0.5})
 
     def train(self, tokens_list: List[List[str]]):
         joined_texts = [" ".join(t) for t in tokens_list]
