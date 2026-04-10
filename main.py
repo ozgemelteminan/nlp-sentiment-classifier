@@ -30,18 +30,12 @@ def main():
     validX, validY = preprocessor.prepare_data(valid_data)
 
     print("Starting Grid Search...")
-    # C'yi 0.25 civarında çok daha hassas tarayacağız
     param_grid = {
-        'C': [0.15, 0.20, 0.25, 0.30, 0.35],
-        'class_weight': [
-            None,                
-            {0: 1.0, 1: 1.03},
-            {0: 1.0, 1: 1.05},    
-            {0: 1.0, 1: 1.08}
-        ]
+        'C': [0.35, 0.40, 0.45],
+        'class_weight': [None]
     }
 
-    temp_model = LinearSVC(max_iter=10000, dual="auto", random_state=42)
+    temp_model = LinearSVC(max_iter=20000, dual="auto", random_state=42)
 
     search = GridSearchCV(
         estimator=temp_model, 
@@ -49,7 +43,7 @@ def main():
         scoring='f1_weighted',      
         cv=5,                    
         verbose=1, 
-        n_jobs=1  # Kırmızı Mac hatasını önlemek için 1'e geri aldık
+        n_jobs=1  
     )
 
     search.fit(trainX, trainY)

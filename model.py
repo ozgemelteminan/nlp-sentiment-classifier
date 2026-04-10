@@ -37,7 +37,8 @@ class Model:
             C=c_value, 
             class_weight=cw, 
             max_iter=10000, 
-            dual="auto", 
+            dual="auto",
+            tol=1e-5, 
             random_state=42
         )
 

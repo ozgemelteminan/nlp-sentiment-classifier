@@ -86,15 +86,16 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\bimo\b", "in my opinion", text, flags=re.IGNORECASE)
         text = re.sub(r"\bafaik\b", "as far as i know", text, flags=re.IGNORECASE)
         text = re.sub(r"\bbtw\b", "by the way", text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(waste of time|waste of money|worst movie)\b', r'<neg_signal> \1', text, flags=re.IGNORECASE)
     
         # EKLE: Derecelendirme ifadeleri
         text = re.sub(r"\b(\d+)\s*/\s*10\b", " <rating> ", text)
         text = re.sub(r"\b(\d+)\s*stars?\b", " <rating> ", text, flags=re.IGNORECASE)
         # 1. HTML VE GÜRÜLTÜ TEMİZLİĞİ
         text = re.sub(r"<br\s*/?>", " ", text)
-        text = re.sub(r"<[^>]+>", " ", text)         # BUG FIX: <b>,<i>,<p> vs. → <> token'ı üretiyordu (1553 kez!)
-        text = re.sub(r"&\w+;", " ", text)            # HTML entity'leri (&amp;, &quot;)
-        text = re.sub(r"(\w)-(\w)", r"\1 \2", text)   # Tireli kelimeler (well-made → well made)
+        text = re.sub(r"<[^>]+>", " ", text)        
+        text = re.sub(r"&\w+;", " ", text)            
+        text = re.sub(r"(\w)-(\w)", r"\1 \2", text)   
 
         # 2. İNTERNET JARGONU VE GÜNLÜK DİL
         text = re.sub(r"\bomg\b", "oh my god", text, flags=re.IGNORECASE)
@@ -107,8 +108,6 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\by'all\b", "you all", text, flags=re.IGNORECASE)
 
         # 3. EKSİK KESME İŞARETLİ VE GİZLİ NEGATİFLER
-        # BUG FIX: can't ve won't ÖNCE explicit yakalanmalı —
-        # aksi halde n't pattern'ı "ca" ve "wo" artığı bırakıyordu (52 + 17 kez!)
         text = re.sub(r"\bcan't\b", "can not", text, flags=re.IGNORECASE)
         text = re.sub(r"\bwon't\b", "will not", text, flags=re.IGNORECASE)
 
@@ -136,7 +135,7 @@ class Tokenizer(PreprocessorObject):
 
         # 5. BÜYÜK HARF, EMOJİ, URL (lowercase bu adımda)
         text = re.sub(r'\b([A-Z]{2,})\b', r'\1 <ALLCAPS>', text)
-        text = text.lower()   # ← bundan sonra eklenen token'lar lowercase olmalı!
+        text = text.lower()   
 
         text = re.sub(r"(:\)|:-\)|=\)|:d|:-d|<3)", " <smile> ", text)
         text = re.sub(r"(:\(|:-\(|=\(|:'\()", " <sad> ", text)
@@ -145,8 +144,6 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\d+", " <num> ", text)
 
         # 6. NOKTALAMA İŞARETLERİ
-        # BUG FIX: lowercase'den SONRA eklenen token'lar küçük harfli olmalı,
-        # yoksa [^a-z\s<>] temizliği büyük harfleri silip <> bırakıyordu!
         text = re.sub(r"\.{2,}", " <ellipsis> ", text)
         text = re.sub(r"!{2,}", " <multiexclaim> ", text)   # önce çoklu
         text = re.sub(r"!", " <exclamation> ", text)         # sonra tekli
@@ -166,10 +163,10 @@ class Embedder(PreprocessorObject):
             word_tfidf = TfidfVectorizer(
                 analyzer='word', 
                 token_pattern=r"\S+",       
-                ngram_range=(1, 2),         
+                ngram_range=(1, 3),         
                 sublinear_tf=True,          
                 max_features=100000,        
-                min_df=3,                   
+                min_df=4,                   
                 max_df=0.85,                
                 norm='l2'
             )
