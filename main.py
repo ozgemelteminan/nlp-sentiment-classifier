@@ -31,8 +31,8 @@ def main():
 
     print("Starting Grid Search...")
     param_grid = {
-        'C': [0.35, 0.40, 0.45],
-        'class_weight': [None]
+        'C': [0.42, 0.45, 0.48],
+        'class_weight': [None, 'balanced']
     }
 
     temp_model = LinearSVC(max_iter=20000, dual="auto", random_state=42)

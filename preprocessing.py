@@ -87,7 +87,7 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\bafaik\b", "as far as i know", text, flags=re.IGNORECASE)
         text = re.sub(r"\bbtw\b", "by the way", text, flags=re.IGNORECASE)
         text = re.sub(r'\b(waste of time|waste of money|worst movie)\b', r'<neg_signal> \1', text, flags=re.IGNORECASE)
-    
+        text = re.sub(r'\b(highly recommend|one of the best|masterpiece|loved it|must see|pleasant surprise)\b', r'<pos_signal> \1', text, flags=re.IGNORECASE)
         # EKLE: Derecelendirme ifadeleri
         text = re.sub(r"\b(\d+)\s*/\s*10\b", " <rating> ", text)
         text = re.sub(r"\b(\d+)\s*stars?\b", " <rating> ", text, flags=re.IGNORECASE)
