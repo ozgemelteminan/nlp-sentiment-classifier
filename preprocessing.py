@@ -4,7 +4,6 @@
 # !         classes.
 # !     You need to update Tokenizer and Embedder classes.
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
 from typing import List, Dict, Tuple
 import pickle 
 import re
@@ -82,22 +81,27 @@ class Tokenizer(PreprocessorObject):
         return result
 
     def tokenize(self, text: str) -> List[str]:
-
         text = re.sub(r"\bimo\b", "in my opinion", text, flags=re.IGNORECASE)
         text = re.sub(r"\bafaik\b", "as far as i know", text, flags=re.IGNORECASE)
         text = re.sub(r"\bbtw\b", "by the way", text, flags=re.IGNORECASE)
+
+        # Güçlü sinyal kelimeleri ikile → TF-IDF'te daha yüksek ağırlık
+        text = re.sub(r'\b(terrible|awful|horrible|dreadful|atrocious|unwatchable|unbearable|disgusting|pathetic|garbage|trash|rubbish|abysmal|worst|waste)\b',
+                      r'\1 \1', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(excellent|brilliant|outstanding|phenomenal|superb|magnificent|extraordinary|flawless|breathtaking|spectacular|stunning|incredible|amazing|fantastic|wonderful|masterpiece)\b',
+                      r'\1 \1', text, flags=re.IGNORECASE)
+
         text = re.sub(r'\b(waste of time|waste of money|worst movie)\b', r'<neg_signal> \1', text, flags=re.IGNORECASE)
         text = re.sub(r'\b(highly recommend|one of the best|masterpiece|loved it|must see|pleasant surprise)\b', r'<pos_signal> \1', text, flags=re.IGNORECASE)
-        # EKLE: Derecelendirme ifadeleri
+
         text = re.sub(r"\b(\d+)\s*/\s*10\b", " <rating> ", text)
         text = re.sub(r"\b(\d+)\s*stars?\b", " <rating> ", text, flags=re.IGNORECASE)
-        # 1. HTML VE GÜRÜLTÜ TEMİZLİĞİ
+
         text = re.sub(r"<br\s*/?>", " ", text)
         text = re.sub(r"<[^>]+>", " ", text)        
         text = re.sub(r"&\w+;", " ", text)            
         text = re.sub(r"(\w)-(\w)", r"\1 \2", text)   
 
-        # 2. İNTERNET JARGONU VE GÜNLÜK DİL
         text = re.sub(r"\bomg\b", "oh my god", text, flags=re.IGNORECASE)
         text = re.sub(r"\blol\b", " <smile> ", text, flags=re.IGNORECASE)
         text = re.sub(r"\bwtf\b", "what the heck", text, flags=re.IGNORECASE)
@@ -107,10 +111,8 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\bgotta\b", "got to", text, flags=re.IGNORECASE)
         text = re.sub(r"\by'all\b", "you all", text, flags=re.IGNORECASE)
 
-        # 3. EKSİK KESME İŞARETLİ VE GİZLİ NEGATİFLER
         text = re.sub(r"\bcan't\b", "can not", text, flags=re.IGNORECASE)
         text = re.sub(r"\bwon't\b", "will not", text, flags=re.IGNORECASE)
-
         text = re.sub(r"\bdidnt\b", "did not", text, flags=re.IGNORECASE)
         text = re.sub(r"\bdont\b", "do not", text, flags=re.IGNORECASE)
         text = re.sub(r"\bdoesnt\b", "does not", text, flags=re.IGNORECASE)
@@ -124,7 +126,6 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"\bain't\b|\baint\b", "is not", text, flags=re.IGNORECASE)
         text = re.sub(r"\bcannot\b", "can not", text, flags=re.IGNORECASE)
 
-        # 4. STANDART KISALTMALAR
         text = re.sub(r"n't\b", " not", text, flags=re.IGNORECASE)
         text = re.sub(r"'re\b", " are", text, flags=re.IGNORECASE)
         text = re.sub(r"'ve\b", " have", text, flags=re.IGNORECASE)
@@ -133,7 +134,6 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"'m\b",  " am", text, flags=re.IGNORECASE)
         text = re.sub(r"'s\b",  " is", text, flags=re.IGNORECASE)
 
-        # 5. BÜYÜK HARF, EMOJİ, URL (lowercase bu adımda)
         text = re.sub(r'\b([A-Z]{2,})\b', r'\1 <ALLCAPS>', text)
         text = text.lower()   
 
@@ -143,12 +143,11 @@ class Tokenizer(PreprocessorObject):
         text = re.sub(r"([a-z])\1{2,}", r"\1\1 <elongated> ", text)
         text = re.sub(r"\d+", " <num> ", text)
 
-        # 6. NOKTALAMA İŞARETLERİ
         text = re.sub(r"\.{2,}", " <ellipsis> ", text)
-        text = re.sub(r"!{2,}", " <multiexclaim> ", text)   # önce çoklu
-        text = re.sub(r"!", " <exclamation> ", text)         # sonra tekli
-        text = re.sub(r"\?{2,}", " <multiquestion> ", text)  # önce çoklu
-        text = re.sub(r"\?", " <question> ", text)           # sonra tekli
+        text = re.sub(r"!{2,}", " <multiexclaim> ", text)
+        text = re.sub(r"!", " <exclamation> ", text)
+        text = re.sub(r"\?{2,}", " <multiquestion> ", text)
+        text = re.sub(r"\?", " <question> ", text)
 
         text = re.sub(r"[^a-z\s<>]", "", text)
 

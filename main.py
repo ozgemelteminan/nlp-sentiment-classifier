@@ -1,9 +1,11 @@
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# ! This is a sample file for your experiments. You can change
+# !     this file as you wish.
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 from preprocessing import Preprocessor, Tokenizer, Embedder
 from model import Model
 import pandas as pd
 import os
-from sklearn.svm import LinearSVC
-from sklearn.model_selection import GridSearchCV
 
 def main():
     print("Loading datasets...")
@@ -29,29 +31,8 @@ def main():
     trainX, trainY = preprocessor.prepare_data(train_data)
     validX, validY = preprocessor.prepare_data(valid_data)
 
-    print("Starting Grid Search...")
-    param_grid = {
-        'C': [0.42, 0.45, 0.48],
-        'class_weight': [None, 'balanced']
-    }
-
-    temp_model = LinearSVC(max_iter=20000, dual="auto", random_state=42)
-
-    search = GridSearchCV(
-        estimator=temp_model, 
-        param_grid=param_grid, 
-        scoring='f1_weighted',      
-        cv=5,                    
-        verbose=1, 
-        n_jobs=1  
-    )
-
-    search.fit(trainX, trainY)
-    best_params = search.best_params_
-    print(f"Best Params: {best_params}")
-
     print("Training Final Model...")
-    model = Model(**best_params)
+    model = Model(C=0.5, class_weight=None, loss='squared_hinge')
     model.train(trainX, trainY)
     model.save("saved_objects/model.pkl")
 

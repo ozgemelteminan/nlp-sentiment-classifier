@@ -25,18 +25,20 @@ class Model:
             self.__dict__.update(self.load(self.pretrained_path).__dict__)
         else:
             self.init_model(**kwargs)
-             
+
     ###########################################################
     # ! Update functions for Model initialization and training
     ###########################################################
     def init_model(self, **kwargs):
-        c_value = kwargs.get('C', 0.25) 
+        c_value = kwargs.get('C', 0.5) 
         cw = kwargs.get('class_weight', None)
+        loss = kwargs.get('loss', 'squared_hinge')
         
         self.model = LinearSVC(
             C=c_value, 
-            class_weight=cw, 
-            max_iter=10000, 
+            class_weight=cw,
+            loss=loss,
+            max_iter=20000, 
             dual="auto",
             tol=1e-5, 
             random_state=42
@@ -53,7 +55,6 @@ class Model:
 
     def evaluate(self, x: List[List[float]], y: List[int]) -> Dict:
         prediction = self.predict(x)
-
         return {"accuracy": accuracy_score(y, prediction),
                 "f1": f1_score(y, prediction, average="weighted"),
                 "roc_auc": roc_auc_score(y, prediction, average="weighted")}
