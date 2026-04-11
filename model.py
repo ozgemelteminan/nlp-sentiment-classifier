@@ -65,4 +65,4 @@ class Model:
 
     def load(self, path: str):
         with open(path, 'rb') as f:
-            return pickle.load(f)
+            return pickle.load(f) 

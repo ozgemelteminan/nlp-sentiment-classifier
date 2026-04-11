@@ -188,4 +188,4 @@ class Embedder(PreprocessorObject):
 
     def embed(self, tokens_list: List[List[str]]):
         joined_texts = [" ".join(t) for t in tokens_list]
-        return self.model.transform(joined_texts)
+        return self.model.transform(joined_texts) 

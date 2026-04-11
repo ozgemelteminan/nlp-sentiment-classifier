@@ -42,4 +42,4 @@ def main():
     print(f"Valid F1: {model.evaluate(validX, validY)['f1']}")
 
 if __name__ == '__main__':
-    main() 
+    main()  

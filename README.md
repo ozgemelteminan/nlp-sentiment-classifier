@@ -87,4 +87,4 @@ The `Embedder` merges two representations using `FeatureUnion`:
 ### 3. Model & Hyperparameters
 Classification is handled by `LinearSVC`. Optimization was done using `GridSearchCV`:
 * **Cross-Validation:** 5-fold CV.
-* **Scoring Metric:** `f1_weighted` was explicitly targeted to ensure balanced performance.
+* **Scoring Metric:** `f1_weighted` was explicitly targeted to ensure balanced performance. 

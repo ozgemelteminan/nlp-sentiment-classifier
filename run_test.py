@@ -51,3 +51,4 @@ if __name__ == "__main__":
 
     model = Model(pretrained_path="saved_objects/model.pkl")
     print("Evaluation result: ", model.evaluate(X, y))
+   
